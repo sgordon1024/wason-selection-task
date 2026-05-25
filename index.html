@@ -756,7 +756,7 @@ header {
   </header>
 
   <!-- INTRO DIALOG -->
-  <div class="intro-backdrop gone" id="intro-backdrop" role="dialog" aria-modal="true" aria-labelledby="intro-title">
+  <div class="intro-backdrop gone" id="intro-backdrop" role="dialog" aria-modal="true" aria-labelledby="intro-title" onclick="if(event.target===this)dismissIntro()">
     <div class="intro-dialog">
       <button class="intro-close" onclick="dismissIntro()" aria-label="Close">✕</button>
 
@@ -1027,6 +1027,7 @@ function startGame() {
 
   buildProgressTrack();
   loadRound();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ─── Progress track ───────────────────────────────────────────────────────────
@@ -1290,7 +1291,9 @@ function showFinalScreen() {
     fs.style.display = 'block';
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
-    // Animate bars after a tick
+    // Reset to 0 first so the fill-from-zero animation always plays (including on Play Again)
+    document.getElementById('bar-abs').style.width = '0';
+    document.getElementById('bar-soc').style.width = '0';
     requestAnimationFrame(() => requestAnimationFrame(() => {
       document.getElementById('bar-abs').style.width = `${absPct}%`;
       document.getElementById('bar-soc').style.width = `${socPct}%`;
@@ -1313,6 +1316,11 @@ function getInsight(abs, soc) {
     return {
       headline: "A perfect score across both types — exceptional.",
       body: "Very few people ace both the abstract and social versions. You applied the same logical principle — flip P and ¬Q — consistently regardless of how the rule was framed. The underlying logic is identical; most people only see it clearly in the social case.",
+    };
+  } else if (abs === 0 && soc === 0) {
+    return {
+      headline: "The Wason task is trickier than it looks!",
+      body: "Getting every round wrong is more common than you'd think — especially on the abstract version. The key insight: you're not trying to confirm the rule, you're trying to falsify it. Flip P (it could hide a violation) and ¬Q (if P is on its back, the rule breaks). Try again with that framing.",
     };
   } else {
     return {
