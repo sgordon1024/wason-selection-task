@@ -561,6 +561,16 @@ header {
   line-height: 1.6;
   color: #333;
 }
+.intro-card-types {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 10px;
+  font-size: 0.845rem;
+  line-height: 1.5;
+  color: #333;
+}
 
 /* Mini example cards inside dialog */
 .intro-example {
@@ -851,7 +861,11 @@ header {
       <h2 class="intro-title" id="intro-title">How to Play</h2>
 
       <div class="intro-section">
-        <p>Each round shows you a <strong>rule</strong> and <strong>4 cards</strong>. Every card has a different value on each side — you can only see one side at a time.</p>
+        <p>Each round shows you a <strong>rule</strong> and <strong>4 cards</strong>. You can only see one side of each card at a time.</p>
+        <ul class="intro-card-types">
+          <li><span class="intro-badge abstract" style="vertical-align:middle">Abstract</span> &nbsp;Each card has a <strong>letter</strong> on one side and a <strong>number</strong> on the other.</li>
+          <li><span class="intro-badge social" style="vertical-align:middle">Social</span> &nbsp;Each card has two related pieces of information — e.g. a <strong>drink</strong> on one side and an <strong>age</strong> on the other.</li>
+        </ul>
       </div>
 
       <div class="intro-example">
