@@ -437,6 +437,42 @@ header {
   transform: translateY(-1px);
 }
 
+/* ── Explanation toggle ──────────────────────────────────── */
+.exp-toggle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  width: 100%;
+  background: none;
+  border: none;
+  border-top: 1px solid #ebebeb;
+  padding: 10px 0 6px;
+  margin-top: 10px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.9px;
+  color: #999;
+  cursor: pointer;
+  text-align: left;
+  transition: color 0.12s;
+}
+.exp-toggle:hover { color: #1a1a1a; }
+.exp-toggle-arrow {
+  display: inline-block;
+  font-style: normal;
+  transition: transform 0.22s ease;
+  line-height: 1;
+}
+.exp-toggle.open .exp-toggle-arrow { transform: rotate(90deg); }
+
+.exp-collapse {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.35s ease;
+}
+.exp-collapse.open { max-height: 700px; }
+
 /* ── Screen transitions ──────────────────────────────────── */
 .screen { transition: opacity 0.25s ease; }
 .screen.fading { opacity: 0; pointer-events: none; }
@@ -523,7 +559,12 @@ header {
           <div class="verdict-subtitle" id="verdict-subtitle"></div>
         </div>
       </div>
-      <div class="exp-list" id="exp-list"></div>
+      <button class="exp-toggle" id="exp-toggle" onclick="toggleExplanations()" aria-expanded="false">
+        <span class="exp-toggle-arrow">&#9658;</span> Explanation
+      </button>
+      <div class="exp-collapse" id="exp-collapse">
+        <div class="exp-list" id="exp-list"></div>
+      </div>
       <button class="next-btn" id="next-btn" onclick="nextRound()"></button>
     </div>
   </div>
@@ -918,7 +959,22 @@ function showResults(puz, needed, correct) {
     list.appendChild(item);
   });
 
+  // Reset toggle to collapsed
+  const toggle = document.getElementById('exp-toggle');
+  const collapse = document.getElementById('exp-collapse');
+  toggle.classList.remove('open');
+  toggle.setAttribute('aria-expanded', 'false');
+  collapse.classList.remove('open');
+
   document.getElementById('results').classList.add('visible');
+}
+
+function toggleExplanations() {
+  const toggle = document.getElementById('exp-toggle');
+  const collapse = document.getElementById('exp-collapse');
+  const open = toggle.classList.toggle('open');
+  collapse.classList.toggle('open', open);
+  toggle.setAttribute('aria-expanded', String(open));
 }
 
 // ─── Next round ───────────────────────────────────────────────────────────────
