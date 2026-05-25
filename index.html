@@ -692,6 +692,94 @@ header {
 }
 .intro-start:hover { background: #2d2d2d; }
 
+/* ── Community stats ─────────────────────────────────────── */
+.stats-section {
+  border-top: 1px solid #e8e7e0;
+  padding-top: 18px;
+  margin-bottom: 22px;
+}
+.stats-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+  color: #aaa;
+  padding: 4px 0;
+}
+.stats-spinner {
+  width: 13px; height: 13px;
+  border: 2px solid #ddd;
+  border-top-color: #888;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.stats-error { font-size: 0.78rem; color: #aaa; padding: 4px 0; }
+
+.stats-eyebrow {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.1px;
+  color: #999;
+  margin-bottom: 6px;
+}
+.stats-count-text {
+  font-size: 0.8rem;
+  color: #888;
+  margin-bottom: 12px;
+}
+.stats-rank {
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.45;
+  margin-bottom: 16px;
+  color: #1a1a1a;
+}
+.stats-rank em { font-weight: 400; color: #555; font-style: normal; }
+
+/* Total-score histogram */
+.histo { display: flex; flex-direction: column; gap: 5px; margin-bottom: 18px; }
+.histo-row { display: flex; align-items: center; gap: 7px; }
+.histo-label {
+  font-size: 0.68rem; font-weight: 700;
+  width: 14px; text-align: right; flex-shrink: 0; color: #666;
+}
+.histo-track {
+  flex: 1; height: 9px;
+  background: #ebebeb; border-radius: 5px; overflow: hidden;
+}
+.histo-bar {
+  height: 100%; border-radius: 5px;
+  background: #d4d4d0; width: 0;
+  transition: width 0.55s cubic-bezier(0.4,0,0.2,1);
+}
+.histo-bar.yours { background: #1a1a1a; }
+.histo-pct { font-size: 0.64rem; color: #aaa; width: 30px; flex-shrink: 0; }
+.histo-you { font-size: 0.6rem; font-weight: 700; color: #1a1a1a; width: 36px; flex-shrink: 0; }
+
+/* Abstract vs Social average bars */
+.stats-avg-eyebrow {
+  font-size: 0.68rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 1px; color: #999;
+  margin-bottom: 8px;
+}
+.avg-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.avg-mode-label { font-size: 0.72rem; font-weight: 700; width: 64px; flex-shrink: 0; }
+.avg-track {
+  flex: 1; height: 9px;
+  background: #ebebeb; border-radius: 5px; overflow: hidden;
+}
+.avg-fill {
+  height: 100%; border-radius: 5px; width: 0;
+  transition: width 0.65s 0.15s cubic-bezier(0.4,0,0.2,1);
+}
+.avg-fill.abstract-avg { background: #1a1a1a; }
+.avg-fill.social-avg   { background: #5c6bc0; }
+.avg-value { font-size: 0.7rem; font-weight: 700; width: 30px; flex-shrink: 0; color: #555; }
+
 /* ── Mobile ──────────────────────────────────────────────── */
 @media (max-width: 500px) {
   body { padding: 14px 12px 48px; }
@@ -884,6 +972,24 @@ header {
         system that evolved before general abstract reasoning.
       </div>
 
+      <!-- Community stats -->
+      <div class="stats-section" id="stats-section">
+        <div class="stats-loading" id="stats-loading">
+          <span class="stats-spinner"></span> Loading community stats…
+        </div>
+        <div id="stats-content" style="display:none">
+          <div class="stats-eyebrow">Community Results</div>
+          <div class="stats-count-text" id="stats-count-text"></div>
+          <div class="stats-rank" id="stats-rank"></div>
+          <div class="histo" id="stats-histo"></div>
+          <div class="stats-avg-eyebrow">Average scores across all players</div>
+          <div id="stats-avgs"></div>
+        </div>
+        <div class="stats-error" id="stats-error" style="display:none">
+          Community stats unavailable right now.
+        </div>
+      </div>
+
       <button class="replay-btn" onclick="startGame()">Play Again</button>
     </div>
   </div>
@@ -891,6 +997,8 @@ header {
 </div><!-- /container -->
 
 <script>
+const WORKER = 'https://wason-stats.sgordon1024.workers.dev';
+
 // ─── Puzzle data ──────────────────────────────────────────────────────────────
 const PUZZLES = {
   abstract: [
@@ -1024,6 +1132,7 @@ function startGame() {
 
   document.getElementById('final-screen').style.display = 'none';
   document.getElementById('game-screen').style.display = 'block';
+  resetStatsSection();
 
   buildProgressTrack();
   loadRound();
@@ -1291,6 +1400,10 @@ function showFinalScreen() {
     fs.style.display = 'block';
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
+    // Submit score and pull community stats
+    resetStatsSection();
+    submitAndLoadStats(scores.abstract, scores.social);
+
     // Reset to 0 first so the fill-from-zero animation always plays (including on Play Again)
     document.getElementById('bar-abs').style.width = '0';
     document.getElementById('bar-soc').style.width = '0';
@@ -1328,6 +1441,108 @@ function getInsight(abs, soc) {
       body: "The typical finding is that social versions are easier. Your even score suggests you were applying a consistent logical strategy rather than relying on the intuitive 'cheater detection' shortcut that usually gives social rules an edge. That's a sign of principled reasoning.",
     };
   }
+}
+
+// ─── Analytics ────────────────────────────────────────────────────────────────
+async function submitAndLoadStats(absScore, socScore) {
+  // Submit (fire-and-forget; failure is silent)
+  try {
+    await fetch(`${WORKER}/score`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ abstract: absScore, social: socScore }),
+    });
+  } catch (_) {}
+
+  // Load stats
+  try {
+    const res = await fetch(`${WORKER}/stats`);
+    if (!res.ok) throw new Error();
+    renderStats(await res.json(), absScore + socScore, absScore, socScore);
+  } catch (_) {
+    document.getElementById('stats-loading').style.display = 'none';
+    document.getElementById('stats-error').style.display = 'block';
+  }
+}
+
+function renderStats(data, userTotal, userAbs, userSoc) {
+  const { count, total, abstract, social } = data;
+
+  document.getElementById('stats-loading').style.display = 'none';
+  const content = document.getElementById('stats-content');
+  content.style.display = 'block';
+
+  if (count < 5) {
+    document.getElementById('stats-count-text').textContent =
+      `${count} player${count !== 1 ? 's' : ''} so far — come back once more people have played!`;
+    document.getElementById('stats-rank').textContent = '';
+    return;
+  }
+
+  document.getElementById('stats-count-text').textContent =
+    `${count.toLocaleString()} players have taken this test`;
+
+  // Percentile rank
+  const countBelow = total.slice(0, userTotal).reduce((a, b) => a + b, 0);
+  const pct = Math.round((countBelow / count) * 100);
+  const rankEl = document.getElementById('stats-rank');
+  if (pct >= 50) {
+    rankEl.innerHTML = `Your score of ${userTotal}/6 is higher than <strong>${pct}%</strong> of players.`;
+  } else if (pct === 0) {
+    rankEl.innerHTML = `Your score of ${userTotal}/6 — most players scored higher. <em>Try again!</em>`;
+  } else {
+    rankEl.innerHTML = `Your score of ${userTotal}/6 is higher than <strong>${pct}%</strong> of players.`;
+  }
+
+  // Histogram — total score distribution
+  const histo = document.getElementById('stats-histo');
+  histo.innerHTML = '';
+  const maxN = Math.max(...total, 1);
+  for (let i = 0; i <= 6; i++) {
+    const n = total[i];
+    const barPct = Math.round((n / maxN) * 100);
+    const labelPct = count > 0 ? Math.round((n / count) * 100) : 0;
+    const isYou = i === userTotal;
+    const row = document.createElement('div');
+    row.className = 'histo-row';
+    row.innerHTML = `
+      <div class="histo-label">${i}</div>
+      <div class="histo-track">
+        <div class="histo-bar${isYou ? ' yours' : ''}" data-w="${barPct}"></div>
+      </div>
+      <div class="histo-pct">${labelPct}%</div>
+      <div class="histo-you">${isYou ? '← you' : ''}</div>`;
+    histo.appendChild(row);
+  }
+
+  // Average bars
+  const absAvg = abstract.reduce((s, n, i) => s + n * i, 0) / count;
+  const socAvg = social.reduce((s, n, i) => s + n * i, 0) / count;
+  const avgsEl = document.getElementById('stats-avgs');
+  avgsEl.innerHTML = `
+    <div class="avg-row">
+      <div class="avg-mode-label">Abstract</div>
+      <div class="avg-track"><div class="avg-fill abstract-avg" id="avg-abs"></div></div>
+      <div class="avg-value">${absAvg.toFixed(1)}/3</div>
+    </div>
+    <div class="avg-row">
+      <div class="avg-mode-label">Social</div>
+      <div class="avg-track"><div class="avg-fill social-avg" id="avg-soc"></div></div>
+      <div class="avg-value">${socAvg.toFixed(1)}/3</div>
+    </div>`;
+
+  // Animate everything after a tick
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    histo.querySelectorAll('.histo-bar').forEach(b => { b.style.width = `${b.dataset.w}%`; });
+    document.getElementById('avg-abs').style.width = `${(absAvg / 3) * 100}%`;
+    document.getElementById('avg-soc').style.width = `${(socAvg / 3) * 100}%`;
+  }));
+}
+
+function resetStatsSection() {
+  document.getElementById('stats-loading').style.display = 'flex';
+  document.getElementById('stats-content').style.display = 'none';
+  document.getElementById('stats-error').style.display  = 'none';
 }
 
 // ─── Intro dialog ─────────────────────────────────────────────────────────────
