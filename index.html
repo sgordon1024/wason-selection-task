@@ -477,6 +477,221 @@ header {
 .screen { transition: opacity 0.25s ease; }
 .screen.fading { opacity: 0; pointer-events: none; }
 
+/* ── Help button ─────────────────────────────────────────── */
+.help-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid #bbb;
+  background: transparent;
+  color: #888;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: border-color 0.12s, color 0.12s;
+}
+.help-btn:hover { border-color: #1a1a1a; color: #1a1a1a; }
+
+/* ── Intro dialog ────────────────────────────────────────── */
+.intro-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 15, 15, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 16px;
+  animation: backdropIn 0.2s ease;
+  transition: opacity 0.22s ease;
+}
+.intro-backdrop.dismissing { opacity: 0; pointer-events: none; }
+.intro-backdrop.gone       { display: none; }
+
+@keyframes backdropIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes dialogIn {
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+.intro-dialog {
+  background: #fff;
+  border: 2px solid #1a1a1a;
+  border-radius: 12px;
+  max-width: 480px;
+  width: 100%;
+  padding: 28px 24px 22px;
+  position: relative;
+  max-height: 88vh;
+  overflow-y: auto;
+  animation: dialogIn 0.26s ease;
+}
+
+.intro-close {
+  position: absolute;
+  top: 14px; right: 16px;
+  background: none;
+  border: none;
+  font-size: 1rem;
+  color: #aaa;
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px;
+  transition: color 0.12s;
+}
+.intro-close:hover { color: #1a1a1a; }
+
+.intro-title {
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: -0.3px;
+  margin-bottom: 16px;
+}
+
+.intro-section { margin-bottom: 16px; }
+.intro-section p {
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: #333;
+}
+
+/* Mini example cards inside dialog */
+.intro-example {
+  background: #f4f3ef;
+  border-radius: 8px;
+  padding: 14px 14px 12px;
+  margin: 12px 0;
+}
+.intro-example-rule {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #555;
+  font-style: italic;
+  margin-bottom: 10px;
+  text-align: center;
+}
+.intro-mini-cards {
+  display: flex;
+  gap: 6px;
+  justify-content: center;
+  margin-bottom: 10px;
+}
+.mini-card {
+  width: 44px;
+  height: 56px;
+  border: 2px solid #1a1a1a;
+  border-radius: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 800;
+  background: #fff;
+  position: relative;
+}
+.mini-card.flip-me {
+  background: #1a1a1a;
+  color: #f4f3ef;
+}
+.mini-card-tip {
+  position: absolute;
+  bottom: -18px;
+  font-size: 0.55rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: #1a1a1a;
+  white-space: nowrap;
+}
+.intro-example-note {
+  font-size: 0.78rem;
+  color: #555;
+  text-align: center;
+  margin-top: 8px;
+  line-height: 1.5;
+}
+
+/* Steps list */
+.intro-steps {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin: 12px 0;
+}
+.intro-steps li {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: #333;
+}
+.step-num {
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #1a1a1a;
+  color: #f4f3ef;
+  font-size: 0.65rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+
+/* Structure badges */
+.intro-structure {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 12px 0 4px;
+  flex-wrap: wrap;
+}
+.intro-badge {
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+.intro-badge.abstract { background: #e8e7e0; color: #444; }
+.intro-badge.social   { background: #ebe8f8; color: #5c6bc0; }
+.intro-badge.results  { background: #f0fdf4; color: #15803d; }
+.intro-badge-arrow    { font-size: 0.75rem; color: #aaa; }
+
+.intro-divider {
+  border: none;
+  border-top: 1px solid #eee;
+  margin: 16px 0;
+}
+
+.intro-start {
+  display: block;
+  width: 100%;
+  padding: 13px;
+  background: #1a1a1a;
+  color: #f4f3ef;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.3px;
+  transition: background 0.14s;
+  margin-top: 6px;
+}
+.intro-start:hover { background: #2d2d2d; }
+
 /* ── Mobile ──────────────────────────────────────────────── */
 @media (max-width: 500px) {
   body { padding: 14px 12px 48px; }
@@ -534,8 +749,61 @@ header {
 
   <header>
     <div class="site-title">Wason Selection Task</div>
-    <div class="progress-track" id="progress-track"></div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="progress-track" id="progress-track"></div>
+      <button class="help-btn" onclick="showIntro()" aria-label="How to play">?</button>
+    </div>
   </header>
+
+  <!-- INTRO DIALOG -->
+  <div class="intro-backdrop gone" id="intro-backdrop" role="dialog" aria-modal="true" aria-labelledby="intro-title">
+    <div class="intro-dialog">
+      <button class="intro-close" onclick="dismissIntro()" aria-label="Close">✕</button>
+
+      <h2 class="intro-title" id="intro-title">How to Play</h2>
+
+      <div class="intro-section">
+        <p>Each round shows you a <strong>rule</strong> and <strong>4 cards</strong>. Every card has a different value on each side — you can only see one side at a time.</p>
+      </div>
+
+      <div class="intro-example">
+        <div class="intro-example-rule">"If there is an A on one side, there must be a 7 on the other."</div>
+        <div class="intro-mini-cards">
+          <div class="mini-card flip-me">A<span class="mini-card-tip">Flip ✓</span></div>
+          <div class="mini-card">G</div>
+          <div class="mini-card">7</div>
+          <div class="mini-card flip-me">8<span class="mini-card-tip">Flip ✓</span></div>
+        </div>
+        <div class="intro-example-note" style="margin-top:22px;">
+          Flip <strong>A</strong> to check its other side is 7.<br>
+          Flip <strong>8</strong> — if A is hiding there, the rule breaks.<br>
+          <em>G and 7 can't reveal a violation no matter what.</em>
+        </div>
+      </div>
+
+      <ul class="intro-steps">
+        <li><span class="step-num">1</span> <span><strong>Click cards</strong> to select the ones you want to flip — they'll highlight.</span></li>
+        <li><span class="step-num">2</span> <span>Hit <strong>Check My Answer</strong> when you're ready.</span></li>
+        <li><span class="step-num">3</span> <span>Cards flip to reveal what was hidden. See the breakdown under <strong>Explanation</strong>.</span></li>
+      </ul>
+
+      <hr class="intro-divider">
+
+      <div class="intro-section">
+        <p style="margin-bottom:10px;">The test has <strong>6 rounds</strong> split across two types:</p>
+        <div class="intro-structure">
+          <span class="intro-badge abstract">Abstract ×3</span>
+          <span class="intro-badge-arrow">→</span>
+          <span class="intro-badge social">Social ×3</span>
+          <span class="intro-badge-arrow">→</span>
+          <span class="intro-badge results">Final Results</span>
+        </div>
+        <p style="margin-top:10px;font-size:0.82rem;color:#666;">The social rounds use real-world scenarios instead of letters and numbers. Most people find them easier — find out if you do too.</p>
+      </div>
+
+      <button class="intro-start" onclick="dismissIntro()">Got it — Let's Play →</button>
+    </div>
+  </div>
 
   <!-- GAME SCREEN -->
   <div id="game-screen" class="screen">
@@ -1054,8 +1322,26 @@ function getInsight(abs, soc) {
   }
 }
 
+// ─── Intro dialog ─────────────────────────────────────────────────────────────
+function showIntro() {
+  const backdrop = document.getElementById('intro-backdrop');
+  backdrop.classList.remove('gone', 'dismissing');
+  // force reflow so animation re-fires if re-opened
+  void backdrop.offsetWidth;
+  backdrop.style.animation = 'none';
+  requestAnimationFrame(() => { backdrop.style.animation = ''; });
+}
+
+function dismissIntro() {
+  localStorage.setItem('wason-seen', '1');
+  const backdrop = document.getElementById('intro-backdrop');
+  backdrop.classList.add('dismissing');
+  setTimeout(() => backdrop.classList.add('gone'), 240);
+}
+
 // ─── Start ────────────────────────────────────────────────────────────────────
 startGame();
+if (!localStorage.getItem('wason-seen')) showIntro();
 </script>
 </body>
 </html>
