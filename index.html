@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wason Selection Task</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #f4f3ef;
+  color: #1a1a1a;
+  min-height: 100vh;
+  padding: 24px 16px 60px;
+}
+.container { max-width: 760px; margin: 0 auto; }
+
+/* ── Header ─────────────────────────────────────────────── */
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 26px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid #1a1a1a;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.site-title { font-size: 1.2rem; font-weight: 700; letter-spacing: -0.3px; }
+
+/* ── Progress track ─────────────────────────────────────── */
+.progress-track {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.pt-group { display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.pt-group-label {
+  font-size: 0.62rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #888;
+}
+.pt-dots { display: flex; gap: 5px; }
+.pt-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid #bbb;
+  background: transparent;
+  transition: background 0.25s, border-color 0.25s, transform 0.2s;
+}
+.pt-dot.done        { background: #1a1a1a; border-color: #1a1a1a; }
+.pt-dot.done.social { background: #5c6bc0; border-color: #5c6bc0; }
+.pt-dot.current        { border-color: #1a1a1a; transform: scale(1.25); }
+.pt-dot.current.social { border-color: #5c6bc0; transform: scale(1.25); }
+
+.pt-arrow { font-size: 0.9rem; color: #aaa; line-height: 1; margin-top: 14px; }
+
+/* ── Phase pill ─────────────────────────────────────────── */
+.phase-pill {
+  display: inline-block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin-bottom: 18px;
+  background: #e8e7e0;
+  color: #555;
+  transition: background 0.3s, color 0.3s;
+}
+.phase-pill.social { background: #ebe8f8; color: #5c6bc0; }
+
+/* ── Rule block ─────────────────────────────────────────── */
+.rule-block {
+  background: #fff;
+  border: 2px solid #1a1a1a;
+  border-radius: 10px;
+  padding: 18px 22px;
+  margin-bottom: 30px;
+}
+.rule-eyebrow {
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: #999;
+  margin-bottom: 7px;
+}
+.rule-text { font-size: 1.05rem; font-weight: 500; line-height: 1.55; }
+
+/* ── Cards ──────────────────────────────────────────────── */
+.cards-area {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+.card-wrapper {
+  perspective: 900px;
+  width: clamp(100px, 22vw, 128px);
+  height: clamp(138px, 30vw, 170px);
+  transition: transform 0.18s ease;
+}
+.card-wrapper.lifted { transform: translateY(-7px); }
+
+.card {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: pointer;
+}
+.card.flipped { transform: rotateY(180deg); cursor: default; }
+
+.card-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #1a1a1a;
+  padding: 10px 8px;
+  text-align: center;
+  user-select: none;
+  gap: 3px;
+}
+.card-front { background: #fff; transition: background 0.14s, color 0.14s, box-shadow 0.14s; }
+.card-front.selected {
+  background: #1a1a1a;
+  color: #f4f3ef;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.18);
+}
+
+.card-glyph {
+  font-size: clamp(1.4rem, 6vw, 2.2rem);
+  font-weight: 800;
+  line-height: 1;
+}
+.card-label {
+  font-size: clamp(0.62rem, 2vw, 0.78rem);
+  font-weight: 600;
+  line-height: 1.2;
+  max-width: 100%;
+  word-break: break-word;
+}
+
+.card-back {
+  background: #f0efe8;
+  transform: rotateY(180deg);
+  flex-direction: column;
+  gap: 5px;
+}
+.card-back.rb-correct { border-color: #16a34a; background: #f0fdf4; }
+.card-back.rb-missed  { border-color: #dc2626; background: #fef2f2; }
+.card-back.rb-extra   { border-color: #d97706; background: #fffbeb; }
+.card-back.rb-skip    { border-color: #94a3b8; background: #f8fafc; }
+
+.back-glyph  { font-size: clamp(1.2rem, 5vw, 1.9rem); font-weight: 800; line-height: 1; }
+.back-sublabel {
+  font-size: clamp(0.58rem, 1.8vw, 0.72rem);
+  font-weight: 600;
+  max-width: 100%;
+  word-break: break-word;
+  line-height: 1.25;
+}
+.back-status {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+.bs-correct { background: #dcfce7; color: #15803d; }
+.bs-missed  { background: #fee2e2; color: #b91c1c; }
+.bs-extra   { background: #fef3c7; color: #b45309; }
+.bs-skip    { background: #e2e8f0; color: #475569; }
+
+/* ── Submit / hint ──────────────────────────────────────── */
+.hint { text-align: center; font-size: 0.78rem; color: #888; margin-bottom: 14px; }
+
+.submit-btn {
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  margin: 0 auto 28px;
+  padding: 13px;
+  background: #1a1a1a;
+  color: #f4f3ef;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.4px;
+  transition: background 0.14s, transform 0.12s, box-shadow 0.12s;
+}
+.submit-btn:hover:not(:disabled) {
+  background: #2d2d2d;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(0,0,0,0.14);
+}
+.submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Results ─────────────────────────────────────────────── */
+.results {
+  display: none;
+  background: #fff;
+  border: 2px solid #1a1a1a;
+  border-radius: 10px;
+  padding: 20px 20px 16px;
+  animation: fadeUp 0.28s ease;
+}
+.results.visible { display: block; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.result-verdict { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 16px; }
+.verdict-icon { font-size: 1.5rem; font-weight: 800; line-height: 1.1; flex-shrink: 0; }
+.verdict-icon.correct { color: #16a34a; }
+.verdict-icon.wrong   { color: #dc2626; }
+.verdict-title    { font-size: 0.95rem; font-weight: 700; }
+.verdict-subtitle { font-size: 0.8rem; color: #666; margin-top: 2px; line-height: 1.4; }
+
+.exp-list { display: flex; flex-direction: column; gap: 7px; margin-bottom: 4px; }
+.exp-item {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 9px 11px;
+  border-radius: 6px;
+  font-size: 0.83rem;
+  line-height: 1.5;
+}
+.ei-correct { background: #f0fdf4; border-left: 3px solid #22c55e; }
+.ei-missed  { background: #fef2f2; border-left: 3px solid #ef4444; }
+.ei-extra   { background: #fffbeb; border-left: 3px solid #f59e0b; }
+.ei-skip    { background: #f8fafc; border-left: 3px solid #cbd5e1; }
+.exp-icon   { font-size: 0.9rem; flex-shrink: 0; margin-top: 1px; }
+.exp-card   { font-weight: 700; margin-bottom: 1px; }
+.exp-reason { color: #444; }
+
+.next-btn {
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  margin: 16px auto 0;
+  padding: 11px;
+  background: transparent;
+  color: #1a1a1a;
+  border: 2px solid #1a1a1a;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.14s, color 0.14s;
+}
+.next-btn:hover { background: #1a1a1a; color: #f4f3ef; }
+
+/* ── FINAL SCREEN ────────────────────────────────────────── */
+#final-screen { animation: fadeUp 0.4s ease; }
+
+.final-card {
+  background: #fff;
+  border: 2px solid #1a1a1a;
+  border-radius: 12px;
+  padding: 32px 28px 28px;
+}
+
+.final-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.final-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+.final-total {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #555;
+}
+.final-total span { color: #1a1a1a; }
+.perfect-badge {
+  display: inline-block;
+  background: #fef9c3;
+  color: #854d0e;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 3px 10px;
+  border-radius: 20px;
+  border: 1px solid #fde047;
+  margin-left: 10px;
+  vertical-align: middle;
+}
+
+/* Score bars */
+.score-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 28px;
+}
+.score-bar-row { display: flex; align-items: center; gap: 12px; }
+.bar-mode-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  width: 72px;
+  flex-shrink: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #555;
+}
+.bar-track {
+  flex: 1;
+  height: 14px;
+  background: #ebebeb;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.bar-fill {
+  height: 100%;
+  border-radius: 8px;
+  width: 0;
+  transition: width 0.9s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.bar-fill.abstract-bar { background: #1a1a1a; }
+.bar-fill.social-bar   { background: #5c6bc0; }
+.bar-score-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  width: 34px;
+  flex-shrink: 0;
+  text-align: right;
+}
+
+/* Insight */
+.insight-block {
+  background: #f4f3ef;
+  border-radius: 8px;
+  padding: 18px 20px;
+  margin-bottom: 20px;
+}
+.insight-headline {
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 8px;
+  line-height: 1.4;
+}
+.insight-body {
+  font-size: 0.875rem;
+  color: #444;
+  line-height: 1.6;
+}
+
+/* Wason footnote */
+.wason-note {
+  font-size: 0.78rem;
+  color: #888;
+  line-height: 1.6;
+  padding: 14px 0;
+  border-top: 1px solid #e8e7e0;
+  margin-bottom: 22px;
+}
+.wason-note strong { color: #555; }
+
+/* Score breakdown mini-grid */
+.score-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 28px;
+}
+.score-cell {
+  border-radius: 8px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.score-cell.abstract-cell { background: #f0f0f0; }
+.score-cell.social-cell   { background: #eeedf8; }
+.score-cell-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: #888;
+}
+.score-cell-num {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -1px;
+}
+.abstract-cell .score-cell-num { color: #1a1a1a; }
+.social-cell .score-cell-num   { color: #5c6bc0; }
+.score-cell-denom { font-size: 0.85rem; color: #888; font-weight: 600; }
+
+.replay-btn {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  background: #1a1a1a;
+  color: #f4f3ef;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.4px;
+  transition: background 0.14s, transform 0.12s;
+}
+.replay-btn:hover {
+  background: #2d2d2d;
+  transform: translateY(-1px);
+}
+
+/* ── Screen transitions ──────────────────────────────────── */
+.screen { transition: opacity 0.25s ease; }
+.screen.fading { opacity: 0; pointer-events: none; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="site-title">Wason Selection Task</div>
+    <div class="progress-track" id="progress-track"></div>
+  </header>
+
+  <!-- GAME SCREEN -->
+  <div id="game-screen" class="screen">
+    <div class="phase-pill" id="phase-pill"></div>
+
+    <div class="rule-block">
+      <div class="rule-eyebrow">The Rule</div>
+      <div class="rule-text" id="rule-text"></div>
+    </div>
+
+    <div class="cards-area" id="cards-area"></div>
+
+    <p class="hint">Click cards to select which ones to flip, then submit.</p>
+    <button class="submit-btn" id="submit-btn" onclick="submitAnswer()">Check My Answer</button>
+
+    <div class="results" id="results">
+      <div class="result-verdict">
+        <div class="verdict-icon" id="verdict-icon"></div>
+        <div>
+          <div class="verdict-title" id="verdict-title"></div>
+          <div class="verdict-subtitle" id="verdict-subtitle"></div>
+        </div>
+      </div>
+      <div class="exp-list" id="exp-list"></div>
+      <button class="next-btn" id="next-btn" onclick="nextRound()"></button>
+    </div>
+  </div>
+
+  <!-- FINAL SCREEN -->
+  <div id="final-screen" class="screen" style="display:none">
+    <div class="final-card">
+      <div class="final-header">
+        <div class="final-title" id="final-title">Test Complete</div>
+        <div class="final-total" id="final-total"></div>
+      </div>
+
+      <div class="score-grid">
+        <div class="score-cell abstract-cell">
+          <div class="score-cell-label">Abstract</div>
+          <div class="score-cell-num" id="abs-num">—</div>
+          <div class="score-cell-denom">out of 3</div>
+        </div>
+        <div class="score-cell social-cell">
+          <div class="score-cell-label">Social</div>
+          <div class="score-cell-num" id="soc-num">—</div>
+          <div class="score-cell-denom">out of 3</div>
+        </div>
+      </div>
+
+      <div class="score-bars">
+        <div class="score-bar-row">
+          <div class="bar-mode-label">Abstract</div>
+          <div class="bar-track"><div class="bar-fill abstract-bar" id="bar-abs"></div></div>
+          <div class="bar-score-label" id="bar-abs-pct"></div>
+        </div>
+        <div class="score-bar-row">
+          <div class="bar-mode-label">Social</div>
+          <div class="bar-track"><div class="bar-fill social-bar" id="bar-soc"></div></div>
+          <div class="bar-score-label" id="bar-soc-pct"></div>
+        </div>
+      </div>
+
+      <div class="insight-block">
+        <div class="insight-headline" id="insight-headline"></div>
+        <div class="insight-body" id="insight-body"></div>
+      </div>
+
+      <div class="wason-note">
+        <strong>About this task:</strong> The Wason Selection Task was devised by Peter Wason in 1966.
+        Most people struggle with the abstract version — typically only 10–25% get it right.
+        In 1989, Leda Cosmides showed that performance jumps dramatically when the same logic is
+        framed as a social contract, suggesting humans have a specialized "cheater-detection"
+        system that evolved before general abstract reasoning.
+      </div>
+
+      <button class="replay-btn" onclick="startGame()">Play Again</button>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<script>
+// ─── Puzzle data ──────────────────────────────────────────────────────────────
+const PUZZLES = {
+  abstract: [
+    {
+      rule: "If there is an A on one side, there must be a 7 on the other side.",
+      cards: [
+        { glyph:"A",  label:"",           backGlyph:"7",   backLabel:"" },
+        { glyph:"G",  label:"",           backGlyph:"2",   backLabel:"" },
+        { glyph:"7",  label:"",           backGlyph:"A",   backLabel:"" },
+        { glyph:"8",  label:"",           backGlyph:"K",   backLabel:"" },
+      ],
+      correct: [0,3],
+      explanations: [
+        { needed:true,  text:"A triggers the rule — check that 7 is on the other side." },
+        { needed:false, text:"G is not A, so the rule says nothing about this card." },
+        { needed:false, text:"The rule is A → 7, not 7 → A. What hides behind 7 can't break it." },
+        { needed:true,  text:"8 is not 7. If A is hiding behind it, the rule is violated." },
+      ],
+    },
+    {
+      rule: "If there is a vowel on one side, there must be an even number on the other side.",
+      cards: [
+        { glyph:"E",  label:"vowel",      backGlyph:"4",   backLabel:"even" },
+        { glyph:"K",  label:"consonant",  backGlyph:"7",   backLabel:"odd" },
+        { glyph:"4",  label:"even",       backGlyph:"U",   backLabel:"vowel" },
+        { glyph:"7",  label:"odd",        backGlyph:"F",   backLabel:"consonant" },
+      ],
+      correct: [0,3],
+      explanations: [
+        { needed:true,  text:"E is a vowel — verify that the other side is even." },
+        { needed:false, text:"K is a consonant. The rule only restricts vowels." },
+        { needed:false, text:"4 is even. Whatever letter hides behind it can't break the rule." },
+        { needed:true,  text:"7 is odd. If a vowel is hidden here, the rule is broken." },
+      ],
+    },
+    {
+      rule: "If there is a D on one side, there must be a 3 on the other side.",
+      cards: [
+        { glyph:"D",  label:"",           backGlyph:"3",   backLabel:"" },
+        { glyph:"M",  label:"",           backGlyph:"9",   backLabel:"" },
+        { glyph:"3",  label:"",           backGlyph:"D",   backLabel:"" },
+        { glyph:"5",  label:"",           backGlyph:"R",   backLabel:"" },
+      ],
+      correct: [0,3],
+      explanations: [
+        { needed:true,  text:"D triggers the rule — confirm 3 is on the other side." },
+        { needed:false, text:"M is not D. The rule has nothing to say here." },
+        { needed:false, text:"The rule only says D → 3, not that 3 must pair with D." },
+        { needed:true,  text:"5 is not 3. If D is hiding behind it, the rule is violated." },
+      ],
+    },
+  ],
+  social: [
+    {
+      rule: "If a person is drinking beer, they must be over 21 years old.",
+      cards: [
+        { glyph:"🍺",  label:"Beer",       backGlyph:"17",  backLabel:"years old" },
+        { glyph:"💧",  label:"Water",      backGlyph:"15",  backLabel:"years old" },
+        { glyph:"25",  label:"years old",  backGlyph:"🍺",  backLabel:"Beer" },
+        { glyph:"16",  label:"years old",  backGlyph:"💧",  backLabel:"Water" },
+      ],
+      correct: [0,3],
+      explanations: [
+        { needed:true,  text:"A beer drinker must be over 21. Flip to check this person's age." },
+        { needed:false, text:"Water has no age restriction. Nothing to check." },
+        { needed:false, text:"Age 25 is over 21 — they can drink anything legally." },
+        { needed:true,  text:"Age 16 is underage. If they're drinking beer, the rule is broken." },
+      ],
+    },
+    {
+      rule: "If a person is an employee, they must be wearing a badge.",
+      cards: [
+        { glyph:"👤",  label:"Employee",   backGlyph:"🚫",  backLabel:"No Badge" },
+        { glyph:"👥",  label:"Visitor",    backGlyph:"🏷️", backLabel:"Has Badge" },
+        { glyph:"🏷️", label:"Has Badge",  backGlyph:"👥",  backLabel:"Visitor" },
+        { glyph:"🚫",  label:"No Badge",   backGlyph:"👤",  backLabel:"Employee" },
+      ],
+      correct: [0,3],
+      explanations: [
+        { needed:true,  text:"Employees must wear badges. Flip to verify this one does." },
+        { needed:false, text:"The rule only covers employees. Visitors are unrestricted." },
+        { needed:false, text:"This person has a badge — no rule can be violated regardless of role." },
+        { needed:true,  text:"No badge. If this person is an employee, the rule is broken." },
+      ],
+    },
+    {
+      rule: "If an order includes fries, it must also include a drink.",
+      cards: [
+        { glyph:"🍟",  label:"Fries",      backGlyph:"🚫",  backLabel:"No Drink" },
+        { glyph:"🍔",  label:"Burger",     backGlyph:"🚫",  backLabel:"No Drink" },
+        { glyph:"🥤",  label:"Drink",      backGlyph:"🍟",  backLabel:"Fries" },
+        { glyph:"🚫",  label:"No Drink",   backGlyph:"🍔",  backLabel:"Burger" },
+      ],
+      correct: [0,3],
+      explanations: [
+        { needed:true,  text:"Fries require a drink. Flip to verify a drink was added." },
+        { needed:false, text:"Burgers carry no drink requirement. The rule only covers fries." },
+        { needed:false, text:"Having a drink is fine whether or not fries were ordered." },
+        { needed:true,  text:"No drink on this order. If fries are on the back, it's a violation." },
+      ],
+    },
+  ],
+};
+
+// ─── Game state ───────────────────────────────────────────────────────────────
+const ROUNDS_PER_MODE = 3;
+const TOTAL_ROUNDS = ROUNDS_PER_MODE * 2;
+
+let sequence = [];   // [{mode, idx}, ...]
+let round = 0;       // 0-indexed current round
+let selected = new Set();
+let submitted = false;
+let scores = { abstract: 0, social: 0 };
+
+// ─── Sequence builder ─────────────────────────────────────────────────────────
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function startGame() {
+  scores = { abstract: 0, social: 0 };
+  round = 0;
+  const absSeq = shuffle(PUZZLES.abstract.map((_, i) => ({ mode: 'abstract', idx: i })));
+  const socSeq = shuffle(PUZZLES.social.map((_, i) => ({ mode: 'social', idx: i })));
+  sequence = [...absSeq, ...socSeq];
+
+  document.getElementById('final-screen').style.display = 'none';
+  document.getElementById('game-screen').style.display = 'block';
+
+  buildProgressTrack();
+  loadRound();
+}
+
+// ─── Progress track ───────────────────────────────────────────────────────────
+function buildProgressTrack() {
+  const track = document.getElementById('progress-track');
+  track.innerHTML = '';
+
+  ['abstract', 'social'].forEach((mode, mi) => {
+    const group = document.createElement('div');
+    group.className = 'pt-group';
+    const lbl = document.createElement('div');
+    lbl.className = 'pt-group-label';
+    lbl.textContent = mode;
+    const dots = document.createElement('div');
+    dots.className = 'pt-dots';
+    for (let i = 0; i < ROUNDS_PER_MODE; i++) {
+      const dot = document.createElement('div');
+      dot.className = `pt-dot${mode === 'social' ? ' social' : ''}`;
+      dot.id = `dot-${mi * ROUNDS_PER_MODE + i}`;
+      dots.appendChild(dot);
+    }
+    group.appendChild(lbl);
+    group.appendChild(dots);
+    track.appendChild(group);
+
+    if (mi === 0) {
+      const arrow = document.createElement('div');
+      arrow.className = 'pt-arrow';
+      arrow.textContent = '→';
+      track.appendChild(arrow);
+    }
+  });
+  updateProgress();
+}
+
+function updateProgress() {
+  for (let i = 0; i < TOTAL_ROUNDS; i++) {
+    const dot = document.getElementById(`dot-${i}`);
+    if (!dot) continue;
+    const isSocial = sequence[i] && sequence[i].mode === 'social';
+    dot.className = `pt-dot${isSocial ? ' social' : ''}`;
+    if (i < round)       dot.classList.add('done');
+    else if (i === round) dot.classList.add('current');
+  }
+}
+
+// ─── Load round ───────────────────────────────────────────────────────────────
+function loadRound() {
+  submitted = false;
+  selected.clear();
+
+  const { mode, idx } = sequence[round];
+  const puz = PUZZLES[mode][idx];
+  const isLast = round === TOTAL_ROUNDS - 1;
+
+  const pill = document.getElementById('phase-pill');
+  const modeRound = mode === 'abstract' ? round + 1 : round - ROUNDS_PER_MODE + 1;
+  pill.textContent = `${mode === 'abstract' ? 'Abstract' : 'Social'} · ${modeRound} of ${ROUNDS_PER_MODE}`;
+  pill.className = `phase-pill${mode === 'social' ? ' social' : ''}`;
+
+  document.getElementById('rule-text').textContent = puz.rule;
+  document.getElementById('results').classList.remove('visible');
+  document.getElementById('submit-btn').disabled = false;
+  document.getElementById('next-btn').textContent = isLast ? 'See Results →' : 'Next →';
+
+  updateProgress();
+  renderCards(puz);
+}
+
+// ─── Cards ────────────────────────────────────────────────────────────────────
+function renderCards(puz) {
+  const area = document.getElementById('cards-area');
+  area.innerHTML = '';
+  puz.cards.forEach((c, i) => {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'card-wrapper';
+    wrapper.id = `wrapper-${i}`;
+
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.id = `card-${i}`;
+
+    const front = document.createElement('div');
+    front.className = 'card-face card-front';
+    front.id = `front-${i}`;
+    front.onclick = () => toggleCard(i);
+
+    const fg = document.createElement('div');
+    fg.className = 'card-glyph';
+    fg.textContent = c.glyph;
+    front.appendChild(fg);
+    if (c.label) {
+      const fl = document.createElement('div');
+      fl.className = 'card-label';
+      fl.textContent = c.label;
+      front.appendChild(fl);
+    }
+
+    const back = document.createElement('div');
+    back.className = 'card-face card-back';
+    back.id = `back-${i}`;
+
+    const bg = document.createElement('div');
+    bg.className = 'back-glyph';
+    bg.textContent = c.backGlyph;
+    back.appendChild(bg);
+    if (c.backLabel) {
+      const bl = document.createElement('div');
+      bl.className = 'back-sublabel';
+      bl.textContent = c.backLabel;
+      back.appendChild(bl);
+    }
+
+    card.appendChild(front);
+    card.appendChild(back);
+    wrapper.appendChild(card);
+    area.appendChild(wrapper);
+  });
+}
+
+function toggleCard(i) {
+  if (submitted) return;
+  const front   = document.getElementById(`front-${i}`);
+  const wrapper = document.getElementById(`wrapper-${i}`);
+  if (selected.has(i)) {
+    selected.delete(i);
+    front.classList.remove('selected');
+    wrapper.classList.remove('lifted');
+  } else {
+    selected.add(i);
+    front.classList.add('selected');
+    wrapper.classList.add('lifted');
+  }
+}
+
+// ─── Submit ───────────────────────────────────────────────────────────────────
+function submitAnswer() {
+  if (submitted) return;
+  submitted = true;
+  document.getElementById('submit-btn').disabled = true;
+
+  const { mode, idx } = sequence[round];
+  const puz = PUZZLES[mode][idx];
+  const needed = new Set(puz.correct);
+
+  const correct = needed.size === selected.size && [...needed].every(i => selected.has(i));
+  if (correct) scores[mode]++;
+
+  // Flip: selected first, then missed needed ones
+  const toFlip = [...selected, ...puz.correct.filter(i => !selected.has(i))];
+  const DELAY = 370;
+  toFlip.forEach((i, j) => setTimeout(() => flipCard(i), j * DELAY));
+  setTimeout(() => showResults(puz, needed, correct), toFlip.length * DELAY + 240);
+}
+
+function flipCard(i) {
+  document.getElementById(`wrapper-${i}`).classList.remove('lifted');
+  document.getElementById(`card-${i}`).classList.add('flipped');
+}
+
+// ─── Results ──────────────────────────────────────────────────────────────────
+function showResults(puz, needed, correct) {
+  const vi = document.getElementById('verdict-icon');
+  vi.textContent = correct ? '✓' : '✗';
+  vi.className = `verdict-icon ${correct ? 'correct' : 'wrong'}`;
+  document.getElementById('verdict-title').textContent = correct
+    ? 'Correct!'
+    : 'Not quite.';
+  document.getElementById('verdict-subtitle').textContent = correct
+    ? 'You identified the exact cards needed to test the rule.'
+    : 'Flip P (could break it) and ¬Q (would expose a violation) — not Q or ¬P.';
+
+  const list = document.getElementById('exp-list');
+  list.innerHTML = '';
+
+  puz.cards.forEach((c, i) => {
+    const wasNeeded = needed.has(i);
+    const wasFlipped = selected.has(i);
+    const backEl = document.getElementById(`back-${i}`);
+
+    let cls, icon, bsCls, statusText;
+    if      ( wasNeeded &&  wasFlipped) { cls='ei-correct'; icon='✓'; bsCls='bs-correct'; statusText='Flip needed ✓'; backEl.classList.add('rb-correct'); }
+    else if ( wasNeeded && !wasFlipped) { cls='ei-missed';  icon='✗'; bsCls='bs-missed';  statusText='Should flip';  backEl.classList.add('rb-missed'); }
+    else if (!wasNeeded &&  wasFlipped) { cls='ei-extra';   icon='△'; bsCls='bs-extra';   statusText='Not needed';   backEl.classList.add('rb-extra'); }
+    else                                { cls='ei-skip';    icon='—'; bsCls='bs-skip';    statusText='Correctly skipped'; backEl.classList.add('rb-skip'); }
+
+    const badge = document.createElement('div');
+    badge.className = `back-status ${bsCls}`;
+    badge.textContent = statusText;
+    backEl.appendChild(badge);
+
+    const item = document.createElement('div');
+    item.className = `exp-item ${cls}`;
+    const name = c.label ? `${c.glyph} ${c.label}` : c.glyph;
+    item.innerHTML = `<span class="exp-icon">${icon}</span>
+      <div><div class="exp-card">${name}</div>
+      <div class="exp-reason">${puz.explanations[i].text}</div></div>`;
+    list.appendChild(item);
+  });
+
+  document.getElementById('results').classList.add('visible');
+}
+
+// ─── Next round ───────────────────────────────────────────────────────────────
+function nextRound() {
+  round++;
+  if (round >= TOTAL_ROUNDS) {
+    showFinalScreen();
+  } else {
+    document.getElementById('results').classList.remove('visible');
+    loadRound();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
+
+// ─── Final screen ─────────────────────────────────────────────────────────────
+function showFinalScreen() {
+  const gs = document.getElementById('game-screen');
+  gs.classList.add('fading');
+  setTimeout(() => {
+    gs.style.display = 'none';
+    gs.classList.remove('fading');
+
+    const total = scores.abstract + scores.social;
+    const isPerfect = total === TOTAL_ROUNDS;
+
+    document.getElementById('final-title').innerHTML =
+      'Test Complete' + (isPerfect ? '<span class="perfect-badge">Perfect!</span>' : '');
+    document.getElementById('final-total').innerHTML =
+      `<span>${total}</span> / ${TOTAL_ROUNDS}`;
+
+    document.getElementById('abs-num').textContent = scores.abstract;
+    document.getElementById('soc-num').textContent = scores.social;
+
+    const absPct = Math.round((scores.abstract / ROUNDS_PER_MODE) * 100);
+    const socPct = Math.round((scores.social   / ROUNDS_PER_MODE) * 100);
+    document.getElementById('bar-abs-pct').textContent = `${absPct}%`;
+    document.getElementById('bar-soc-pct').textContent = `${socPct}%`;
+
+    // Insight
+    const { headline, body } = getInsight(scores.abstract, scores.social);
+    document.getElementById('insight-headline').textContent = headline;
+    document.getElementById('insight-body').textContent     = body;
+
+    const fs = document.getElementById('final-screen');
+    fs.style.display = 'block';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // Animate bars after a tick
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      document.getElementById('bar-abs').style.width = `${absPct}%`;
+      document.getElementById('bar-soc').style.width = `${socPct}%`;
+    }));
+  }, 260);
+}
+
+function getInsight(abs, soc) {
+  if (soc > abs) {
+    return {
+      headline: "You found social rules easier to reason about — just like most people.",
+      body: "This is the central finding of Wason task research: humans are far better at spotting rule violations in social contexts than in abstract ones. Our brains appear to have a dedicated system for detecting cheaters in social exchanges — honed over millennia — that kicks in automatically when real people and real stakes are involved.",
+    };
+  } else if (abs > soc) {
+    return {
+      headline: "You bucked the trend — abstract logic came more naturally to you.",
+      body: "Most people score lower on abstract versions and higher on social ones. Your stronger performance on abstract puzzles suggests you may have picked up the underlying P → Q logic early, or are accustomed to formal reasoning. Interestingly, training in logic or mathematics can close the gap that evolution left open.",
+    };
+  } else if (abs === ROUNDS_PER_MODE && soc === ROUNDS_PER_MODE) {
+    return {
+      headline: "A perfect score across both types — exceptional.",
+      body: "Very few people ace both the abstract and social versions. You applied the same logical principle — flip P and ¬Q — consistently regardless of how the rule was framed. The underlying logic is identical; most people only see it clearly in the social case.",
+    };
+  } else {
+    return {
+      headline: "You scored evenly across abstract and social rules.",
+      body: "The typical finding is that social versions are easier. Your even score suggests you were applying a consistent logical strategy rather than relying on the intuitive 'cheater detection' shortcut that usually gives social rules an edge. That's a sign of principled reasoning.",
+    };
+  }
+}
+
+// ─── Start ────────────────────────────────────────────────────────────────────
+startGame();
+</script>
+</body>
+</html>
