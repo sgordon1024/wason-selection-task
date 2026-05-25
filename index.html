@@ -96,15 +96,17 @@ header {
 /* ── Cards ──────────────────────────────────────────────── */
 .cards-area {
   display: flex;
-  gap: 14px;
+  gap: clamp(6px, 2vw, 14px);
   justify-content: center;
   margin-bottom: 22px;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;       /* always one row */
 }
 .card-wrapper {
   perspective: 900px;
-  width: clamp(100px, 22vw, 128px);
-  height: clamp(138px, 30vw, 170px);
+  flex: 1 1 0;             /* grow/shrink equally */
+  min-width: 0;
+  max-width: 128px;
+  aspect-ratio: 3 / 4;    /* height tracks width automatically */
   transition: transform 0.18s ease;
 }
 .card-wrapper.lifted { transform: translateY(-7px); }
@@ -143,12 +145,12 @@ header {
 }
 
 .card-glyph {
-  font-size: clamp(1.4rem, 6vw, 2.2rem);
+  font-size: clamp(1.1rem, 5vw, 2.2rem);
   font-weight: 800;
   line-height: 1;
 }
 .card-label {
-  font-size: clamp(0.62rem, 2vw, 0.78rem);
+  font-size: clamp(0.55rem, 1.8vw, 0.78rem);
   font-weight: 600;
   line-height: 1.2;
   max-width: 100%;
@@ -166,20 +168,20 @@ header {
 .card-back.rb-extra   { border-color: #d97706; background: #fffbeb; }
 .card-back.rb-skip    { border-color: #94a3b8; background: #f8fafc; }
 
-.back-glyph  { font-size: clamp(1.2rem, 5vw, 1.9rem); font-weight: 800; line-height: 1; }
+.back-glyph  { font-size: clamp(1rem, 4.5vw, 1.9rem); font-weight: 800; line-height: 1; }
 .back-sublabel {
-  font-size: clamp(0.58rem, 1.8vw, 0.72rem);
+  font-size: clamp(0.52rem, 1.6vw, 0.72rem);
   font-weight: 600;
   max-width: 100%;
   word-break: break-word;
   line-height: 1.25;
 }
 .back-status {
-  font-size: 0.6rem;
+  font-size: clamp(0.48rem, 1.4vw, 0.6rem);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.4px;
-  padding: 2px 6px;
+  padding: 2px 5px;
   border-radius: 3px;
 }
 .bs-correct { background: #dcfce7; color: #15803d; }
@@ -438,6 +440,57 @@ header {
 /* ── Screen transitions ──────────────────────────────────── */
 .screen { transition: opacity 0.25s ease; }
 .screen.fading { opacity: 0; pointer-events: none; }
+
+/* ── Mobile ──────────────────────────────────────────────── */
+@media (max-width: 500px) {
+  body { padding: 14px 12px 48px; }
+
+  /* Header */
+  header { margin-bottom: 18px; padding-bottom: 12px; gap: 8px; }
+  .site-title { font-size: 1rem; }
+
+  /* Progress — hide text labels, keep dots */
+  .pt-group-label { display: none; }
+  .pt-arrow { margin-top: 8px; font-size: 0.8rem; }
+  .pt-dot { width: 9px; height: 9px; }
+
+  /* Phase pill */
+  .phase-pill { font-size: 0.62rem; padding: 3px 10px; margin-bottom: 14px; }
+
+  /* Rule */
+  .rule-block { padding: 13px 14px; margin-bottom: 20px; }
+  .rule-eyebrow { font-size: 0.6rem; }
+  .rule-text { font-size: 0.92rem; }
+
+  /* Card padding tighter, border thinner */
+  .card-face { padding: 6px 5px; gap: 2px; border-width: 1.5px; }
+
+  /* Buttons full-width */
+  .submit-btn { max-width: none; padding: 12px; font-size: 0.9rem; margin-bottom: 20px; }
+  .next-btn   { max-width: none; }
+
+  /* Results */
+  .results { padding: 13px 12px 10px; }
+  .verdict-title    { font-size: 0.88rem; }
+  .verdict-subtitle { font-size: 0.74rem; }
+  .exp-item { padding: 7px 9px; font-size: 0.78rem; gap: 7px; }
+
+  /* Final screen */
+  .final-card { padding: 20px 14px 18px; }
+  .final-title { font-size: 1.15rem; }
+  .final-total { font-size: 1.1rem; }
+  .score-cell { padding: 11px 12px; }
+  .score-cell-num { font-size: 1.6rem; }
+  .score-cell-denom { font-size: 0.75rem; }
+  .bar-mode-label { font-size: 0.7rem; width: 60px; }
+  .bar-track { height: 11px; }
+  .bar-score-label { font-size: 0.75rem; }
+  .insight-block { padding: 13px 14px; }
+  .insight-headline { font-size: 0.88rem; }
+  .insight-body { font-size: 0.8rem; }
+  .wason-note { font-size: 0.72rem; }
+  .replay-btn { padding: 12px; font-size: 0.9rem; }
+}
 </style>
 </head>
 <body>
